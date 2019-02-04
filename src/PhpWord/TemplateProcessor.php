@@ -1058,7 +1058,7 @@ class TemplateProcessor
     protected function replaceXmlBlock($macro, $block, $blockType = 'w:p')
     {
         $where = $this->findContainingXmlBlockForMacro($macro, $blockType);
-        if (false !== $where) {
+        if (is_array($where)) {
             $this->tempDocumentMainPart = $this->getSlice(0, $where['start']) . $block . $this->getSlice($where['end']);
         }
 
@@ -1102,7 +1102,7 @@ class TemplateProcessor
      * Note that only the first instance of the macro will be found
      *
      * @param string $search Macro name
-     * @param string $offset Offset from which to start searching
+     * @param int $offset Offset from which to start searching
      * @return int -1 if macro not found
      */
     protected function findMacro($search, $offset = 0)
