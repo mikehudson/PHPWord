@@ -200,6 +200,67 @@ final class TemplateProcessorTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers ::setValue
+     * @covers ::cloneRow
+     * @covers ::saveAs
+     * @test
+     */
+    public function testCloneRowAndSetValues()
+    {
+        $mainPart = '<w:tbl>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:vMerge w:val="restart"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:r>
+                            <w:t>${userId}</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:p>
+                        <w:r>
+                            <w:t>${userName}</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:vMerge/>
+                    </w:tcPr>
+                    <w:p/>
+                </w:tc>
+                <w:tc>
+                    <w:p>
+                        <w:r>
+                            <w:t>${userLocation}</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>';
+        $templateProcessor = new TestableTemplateProcesor($mainPart);
+
+        $this->assertEquals(
+            array('userId', 'userName', 'userLocation'),
+            $templateProcessor->getVariables()
+        );
+
+        $values = array(
+            array('userId' => 1, 'userName' => 'Batman', 'userLocation' => 'Gotham City'),
+            array('userId' => 2, 'userName' => 'Superman', 'userLocation' => 'Metropolis'),
+        );
+        $templateProcessor->setValue('tableHeader', 'My clonable table');
+        $templateProcessor->cloneRowAndSetValues('userId', $values);
+        $this->assertContains('<w:t>Superman</w:t>', $templateProcessor->getMainPart());
+        $this->assertContains('<w:t>Metropolis</w:t>', $templateProcessor->getMainPart());
+    }
+
+    /**
      * @expectedException \Exception
      * @test
      */
@@ -300,6 +361,25 @@ final class TemplateProcessorTest extends \PHPUnit\Framework\TestCase
         $templateProcessor->setComplexValue('lastname', $lastname);
 
         $this->assertEquals(preg_replace('/>\s+</', '><', $result), preg_replace('/>\s+</', '><', $templateProcessor->getMainPart()));
+    }
+
+    /**
+     * @covers ::setValues
+     * @test
+     */
+    public function testSetValues()
+    {
+        $mainPart = '<?xml version="1.0" encoding="UTF-8"?>
+        <w:p>
+            <w:r>
+                <w:t xml:space="preserve">Hello ${firstname} ${lastname}</w:t>
+            </w:r>
+        </w:p>';
+
+        $templateProcessor = new TestableTemplateProcesor($mainPart);
+        $templateProcessor->setValues(array('firstname' => 'John', 'lastname' => 'Doe'));
+
+        $this->assertContains('Hello John Doe', $templateProcessor->getMainPart());
     }
 
     /**
