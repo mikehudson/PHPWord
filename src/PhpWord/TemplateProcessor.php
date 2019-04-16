@@ -722,6 +722,8 @@ class TemplateProcessor
 
     /**
      * Clone a block.
+	 *
+	 * This is what we need to work on allowing images!
      *
      * @param string $blockname
      * @param int $clones How many time the block should be cloned
