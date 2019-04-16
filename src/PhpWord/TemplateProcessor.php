@@ -572,6 +572,9 @@ class TemplateProcessor
                     return ($partVar == $searchString) || preg_match('/^' . preg_quote($searchString) . ':/', $partVar);
                 });
 
+                // Fix varsToReplace should be unique
+				$varsToReplace = array_unique($varsToReplace);
+
                 foreach ($varsToReplace as $varNameWithArgs) {
                     $varInlineArgs = $this->getImageArgs($varNameWithArgs);
                     $preparedImageAttrs = $this->prepareImageAttrs($replaceImage, $varInlineArgs);
