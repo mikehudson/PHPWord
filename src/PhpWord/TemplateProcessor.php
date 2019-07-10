@@ -604,6 +604,7 @@ class TemplateProcessor
                     // replace variable
                     $varNameWithArgsFixed = static::ensureMacroCompleted($varNameWithArgs);
                     $matches = array();
+
                     if (preg_match('/(<[^<]+>)([^<]*)(' . preg_quote($varNameWithArgsFixed) . ')([^>]*)(<[^>]+>)/Uu', $partContent, $matches)) {
                         $wholeTag = $matches[0];
                         array_shift($matches);
@@ -742,7 +743,7 @@ class TemplateProcessor
         $xmlBlock = null;
         $matches = array();
         preg_match(
-            '/(<\?xml.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
+            '/(.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
             $this->tempDocumentMainPart,
             $matches
         );
@@ -782,7 +783,7 @@ class TemplateProcessor
     {
         $matches = array();
         preg_match(
-			'/(<\?xml.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
+			'/(.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
             $this->tempDocumentMainPart,
             $matches
         );
@@ -794,6 +795,9 @@ class TemplateProcessor
                 $this->tempDocumentMainPart
             );
         }
+
+        // return a value so we know if it did get replaced
+        return isset($matches[3]);
     }
 
     /**
@@ -803,7 +807,7 @@ class TemplateProcessor
      */
     public function deleteBlock($blockname)
     {
-        $this->replaceBlock($blockname, '');
+        return $this->replaceBlock($blockname, '');
     }
 
     /**
