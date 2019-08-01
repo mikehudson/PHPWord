@@ -740,13 +740,33 @@ class TemplateProcessor
      */
     public function cloneBlock($blockname, $clones = 1, $replace = true, $indexVariables = false, $variableReplacements = null)
     {
+    	// MH the built in functions are awful and just dont work on long strings
+		// so the first thing we do is substring the surroundings then do the regex on the substring and replace the
+		// substring
         $xmlBlock = null;
         $matches = array();
+
+        /*
         preg_match(
-            '/(.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
+            '/(<\?xml.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
             $this->tempDocumentMainPart,
             $matches
         );
+		*/
+
+        // substring then regex on the substring!  Might even help performance forward looking rather than backtracking!
+		$start = strpos($this->tempDocumentMainPart, '${' . $blockname . '}');
+		$end = strpos($this->tempDocumentMainPart, '${/' . $blockname . '}', $start);
+		$str = substr($this->tempDocumentMainPart, $start - 500, ($end - $start) + 1000);
+
+		de($start . ' ' . $end);
+		de($str);
+		preg_match(
+			'/(.*)(<w:p\b[^>]*>.*?\${' . $blockname . '}.*?<\/w:p>)(.*)(<w:p\b[^>]*>.*?\${\/' . $blockname . '}.*?<\/w:p>)/is',
+			$str,
+			$matches
+		);
+		de($matches);
 
         if (isset($matches[3])) {
             $xmlBlock = $matches[3];
@@ -782,11 +802,25 @@ class TemplateProcessor
     public function replaceBlock($blockname, $replacement)
     {
         $matches = array();
-        preg_match(
-			'/(.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
-            $this->tempDocumentMainPart,
-            $matches
-        );
+        //preg_match(
+		//	'/(.*)(<w:p\b.*>\${' . $blockname . '}<\/w:.*?p>)(.*)(<w:p\b.*\${\/' . $blockname . '}<\/w:.*?p>)/is',
+        //    $this->tempDocumentMainPart,
+        //    $matches
+        //);
+
+		// substring then regex on the substring!  Might even help performance forward looking rather than backtracking!
+		$start = strpos($this->tempDocumentMainPart, '${' . $blockname . '}');
+		$end = strpos($this->tempDocumentMainPart, '${/' . $blockname . '}', $start);
+		$str = substr($this->tempDocumentMainPart, $start - 500, ($end - $start) + 1000);
+
+		de($start . ' ' . $end);
+		de($str);
+		preg_match(
+			'/(.*)(<w:p\b[^>]*>.*?\${' . $blockname . '}.*?<\/w:p>)(.*)(<w:p\b[^>]*>.*?\${\/' . $blockname . '}.*?<\/w:p>)/is',
+			$str,
+			$matches
+		);
+		de($matches);
 
         if (isset($matches[3])) {
             $this->tempDocumentMainPart = str_replace(
