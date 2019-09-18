@@ -441,14 +441,14 @@ class TemplateProcessor
         }
     }
 
-    private function prepareImageAttrs($replaceImage, $varInlineArgs)
+    private function prepareImageAttrs($replaceImage, $varInlineArgs, $resize)
     {
         // get image path and size
         $width = null;
         $height = null;
         $ratio = null;
         if (is_array($replaceImage) && isset($replaceImage['path'])) {
-            $imgPath = $replaceImage['path'];
+			$imgPath = $replaceImage['path'];
             if (isset($replaceImage['width'])) {
                 $width = $replaceImage['width'];
             }
@@ -469,6 +469,45 @@ class TemplateProcessor
         if (!is_array($imageData)) {
             throw new Exception(sprintf('Invalid image: %s', $imgPath));
         }
+
+		// MH - custom allow the image to be force resized
+		// This uses laravel tmp should use system tmp but will that work on all installations?
+		// Not sure.  But this then obv ties this tightly into both Laravel and Imagick
+		if($resize) {
+			list($targetWidth, $targetHeight, $imageType) = $imageData;
+
+
+			// flakey as we can only resize pixels
+			if(substr($width, -2) == 'px') {
+				$targetWidth = substr($width, 0, -2) * 3;
+			}
+			if(substr($height, -2) == 'px') {
+				$targetHeight = substr($height, 0, -2) * 3;
+			}
+
+			// clean file name ties now specifically into launchcloud.  All the files passed may have the same
+			// name so we add a random string on
+			$fn = \Str::random(5) . '-' . basename($imgPath);
+			$pos = strpos($fn, '?');
+			if($pos > -1) {
+				$fn = substr($fn, 0, $pos);
+			}
+			$newFile = storage_path() . '/tmp/' . $fn;
+
+			$contents = file_get_contents($imgPath);
+			$image = new \Imagick();
+			$image->readImageBlob($contents);
+			$image->setImageCompressionQuality(75);
+			$image->thumbnailImage($targetWidth, $targetHeight, true);
+
+			$image->writeImage($newFile);
+
+			$imgPath = $newFile;
+
+			// reload image data - this manipulation could be better handled but imagick returns original sizes
+			$imageData = @getimagesize($imgPath);
+		}
+
         list($actualWidth, $actualHeight, $imageType) = $imageData;
 
         // fix aspect ratio (by default)
@@ -542,8 +581,9 @@ class TemplateProcessor
      * @param mixed $search
      * @param mixed $replace Path to image, or array("path" => xx, "width" => yy, "height" => zz)
      * @param int $limit
+     * @param boolean $resize resize the image down
      */
-    public function setImageValue($search, $replace, $limit = self::MAXIMUM_REPLACEMENTS_DEFAULT)
+    public function setImageValue($search, $replace, $limit = self::MAXIMUM_REPLACEMENTS_DEFAULT, $resize = false)
     {
         // prepare $search_replace
         if (!is_array($search)) {
@@ -590,7 +630,9 @@ class TemplateProcessor
 
                 foreach ($varsToReplace as $varNameWithArgs) {
                     $varInlineArgs = $this->getImageArgs($varNameWithArgs);
-                    $preparedImageAttrs = $this->prepareImageAttrs($replaceImage, $varInlineArgs);
+                    // resize
+                    $preparedImageAttrs = $this->prepareImageAttrs($replaceImage, $varInlineArgs, $resize);
+
                     $imgPath = $preparedImageAttrs['src'];
 
                     // get image index
@@ -599,6 +641,12 @@ class TemplateProcessor
 
                     // replace preparations
                     $this->addImageToRelations($partFileName, $rid, $imgPath, $preparedImageAttrs['mime']);
+
+                    // now the image has been added, if we have resized, delete the resized file
+					if($resize) {
+						unlink($preparedImageAttrs['src']);
+					}
+
                     $xmlImage = str_replace(array('{RID}', '{WIDTH}', '{HEIGHT}'), array($rid, $preparedImageAttrs['width'], $preparedImageAttrs['height']), $imgTpl);
 
                     // replace variable
