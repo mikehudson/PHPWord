@@ -805,9 +805,9 @@ class TemplateProcessor
         // substring then regex on the substring!  Might even help performance forward looking rather than backtracking!
 		$start = strpos($this->tempDocumentMainPart, '${' . $blockname . '}');
 		$end = strpos($this->tempDocumentMainPart, '${/' . $blockname . '}', $start);
-		$str = substr($this->tempDocumentMainPart, $start - 500, ($end - $start) + 1000);
+		$str = substr($this->tempDocumentMainPart, $start - 750, ($end - $start) + 1500);
 
-		de($start . ' ' . $end);
+		de('CLONE ' . $blockname . '-' . $start . ' ' . $end);
 		de($str);
 		preg_match(
 			'/(.*)(<w:p\b[^>]*>.*?\${' . $blockname . '}.*?<\/w:p>)(.*)(<w:p\b[^>]*>.*?\${\/' . $blockname . '}.*?<\/w:p>)/is',
@@ -859,9 +859,9 @@ class TemplateProcessor
 		// substring then regex on the substring!  Might even help performance forward looking rather than backtracking!
 		$start = strpos($this->tempDocumentMainPart, '${' . $blockname . '}');
 		$end = strpos($this->tempDocumentMainPart, '${/' . $blockname . '}', $start);
-		$str = substr($this->tempDocumentMainPart, $start - 500, ($end - $start) + 1000);
+		$str = substr($this->tempDocumentMainPart, $start - 750, ($end - $start) + 1500);
 
-		de($start . ' ' . $end);
+		de($blockname . ':' . $start . ' ' . $end);
 		de($str);
 		preg_match(
 			'/(.*)(<w:p\b[^>]*>.*?\${' . $blockname . '}.*?<\/w:p>)(.*)(<w:p\b[^>]*>.*?\${\/' . $blockname . '}.*?<\/w:p>)/is',
