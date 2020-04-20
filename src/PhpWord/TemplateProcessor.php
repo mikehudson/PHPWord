@@ -578,12 +578,34 @@ class TemplateProcessor
     }
 
     /**
+     * Mike custom addition that adds a hyperlink
+     * @param $partFileName
+     * @param $rid
+     * @param $imgPath
+     * @param $imageMimeType
+     */
+    private function addExternalLinkToRelations($partFileName, $rid, $link)
+    {
+        // NOTE:  We do not create the relationship part as we are adding a link to an image so assume
+        // the relationships part exists.  If this is extended later to add hyperlinks in general then make sure
+        // the relationships code to create them from above is included!
+        $relTpl = '<Relationship Id="{RID}" Type="http://. . ./hyperlink" Target="{LINK}" TargetMode="External"/>';
+        $xmlRelation = str_replace(array('{RID}', '{LINK}'), array($rid, $link), $relTpl);
+
+        // add image to relations
+        $this->tempDocumentRelations[$partFileName] = str_replace('</Relationships>', $xmlRelation, $this->tempDocumentRelations[$partFileName]) . '</Relationships>';
+        //de($this->tempDocumentRelations[$partFileName]);
+    }
+
+
+    /**
      * @param mixed $search
      * @param mixed $replace Path to image, or array("path" => xx, "width" => yy, "height" => zz)
      * @param int $limit
      * @param boolean $resize resize the image down
+     * @param string $href url to link to
      */
-    public function setImageValue($search, $replace, $limit = self::MAXIMUM_REPLACEMENTS_DEFAULT, $resize = false)
+    public function setImageValue($search, $replace, $limit = self::MAXIMUM_REPLACEMENTS_DEFAULT, $resize = false, $href = '')
     {
         // prepare $search_replace
         if (!is_array($search)) {
@@ -649,17 +671,31 @@ class TemplateProcessor
 
                     $xmlImage = str_replace(array('{RID}', '{WIDTH}', '{HEIGHT}'), array($rid, $preparedImageAttrs['width'], $preparedImageAttrs['height']), $imgTpl);
 
+                    // and create a hyperlink
+
+                    if($href != false) {
+                        de('is doing');
+                        $linkIndex = $this->getNextRelationsIndex($partFileName);
+                        $rid = 'rId' . $linkIndex;
+                        $this->addExternalLinkToRelations($partFileName, $rid, $href);
+
+                        $xmlImage = $xmlImage . '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>view full size</w:t></w:r></w:hyperlink><w:r><w:rPr/>';
+                        //$xmlImage = '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>' . $xmlImage . '</w:r></w:hyperlink><w:r><w:rPr/>';
+                    }
+
                     // replace variable
                     $varNameWithArgsFixed = static::ensureMacroCompleted($varNameWithArgs);
                     $matches = array();
 
                     if (preg_match('/(<[^<]+>)([^<]*)(' . preg_quote($varNameWithArgsFixed) . ')([^>]*)(<[^>]+>)/Uu', $partContent, $matches)) {
+//de($matches);
                         $wholeTag = $matches[0];
                         array_shift($matches);
                         list($openTag, $prefix, , $postfix, $closeTag) = $matches;
                         $replaceXml = $openTag . $prefix . $closeTag . $xmlImage . $openTag . $postfix . $closeTag;
                         // replace on each iteration, because in one tag we can have 2+ inline variables => before proceed next variable we need to change $partContent
                         $partContent = $this->setValueForPart($wholeTag, $replaceXml, $partContent, $limit);
+//de($partContent);
                     }
                 }
             }
