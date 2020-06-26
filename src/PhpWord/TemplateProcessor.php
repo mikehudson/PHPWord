@@ -679,8 +679,8 @@ class TemplateProcessor
                         $rid = 'rId' . $linkIndex;
                         $this->addExternalLinkToRelations($partFileName, $rid, $href);
 
-                        $xmlImage = $xmlImage . '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>view full size</w:t></w:r></w:hyperlink><w:r><w:rPr/>';
-                        //$xmlImage = '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>' . $xmlImage . '</w:r></w:hyperlink><w:r><w:rPr/>';
+                        //$xmlImage = $xmlImage . '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>view full size</w:t></w:r></w:hyperlink><w:r><w:rPr/>';
+                        $xmlImage = '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:sz w:val="1"/><w:u w:val="none"/><w:color w:val="FFFFFF" /></w:rPr>' . $xmlImage . '<w:t>x</w:t></w:r></w:hyperlink><w:r><w:rPr/>';
                     }
 
                     // replace variable
