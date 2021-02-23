@@ -589,12 +589,11 @@ class TemplateProcessor
         // NOTE:  We do not create the relationship part as we are adding a link to an image so assume
         // the relationships part exists.  If this is extended later to add hyperlinks in general then make sure
         // the relationships code to create them from above is included!
-        $relTpl = '<Relationship Id="{RID}" Type="http://. . ./hyperlink" Target="{LINK}" TargetMode="External"/>';
+        $relTpl = '<Relationship Id="{RID}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="{LINK}" TargetMode="External"/>';
         $xmlRelation = str_replace(array('{RID}', '{LINK}'), array($rid, $link), $relTpl);
 
         // add image to relations
         $this->tempDocumentRelations[$partFileName] = str_replace('</Relationships>', $xmlRelation, $this->tempDocumentRelations[$partFileName]) . '</Relationships>';
-        //de($this->tempDocumentRelations[$partFileName]);
     }
 
 
@@ -674,9 +673,10 @@ class TemplateProcessor
                     // and create a hyperlink
 
                     if($href != false) {
-                        de('is doing');
+                        de('is doing ' . $partFileName);
                         $linkIndex = $this->getNextRelationsIndex($partFileName);
                         $rid = 'rId' . $linkIndex;
+                        de($linkIndex);
                         $this->addExternalLinkToRelations($partFileName, $rid, $href);
 
                         //$xmlImage = $xmlImage . '</w:r><w:hyperlink r:id="' . $rid . '"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>view full size</w:t></w:r></w:hyperlink><w:r><w:rPr/>';
